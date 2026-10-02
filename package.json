@@ -3,8 +3,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "db:migrate": "npm run db:migrate --prefix server",
+    "db:seed": "npm run db:seed --prefix server",
+    "db:studio": "npm run db:studio --prefix server"
   },
+  "prisma": {
+  "seed": "tsx prisma/seed.ts"
+},
   "keywords": [],
   "author": "",
   "license": "ISC",
