@@ -1,6 +1,6 @@
 import type { Response } from 'express'
 import { env } from '../../config/env'
-import { asyncHandler } from '../../utils/asyncHandler'
+import { asyncHandler } from '../../utils/AsyncHandler'
 import * as authService from './auth.service'
 
 const REFRESH_COOKIE = 'refresh_token'
