@@ -1,17 +1,18 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './features/auth/ProtectedRoute'
 import AppShell from './layouts/AppShell'
-import AuthPage from './pages/AuthPage'
 import ComingSoon from './pages/ComingSoon'
 import Dashboard from './pages/Dashboard'
+import Landing from './pages/Landing'
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/login" element={<AuthPage mode="login" />} />
-      <Route path="/register" element={<AuthPage mode="register" />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Navigate to="/?auth=login" replace />} />
+      <Route path="/register" element={<Navigate to="/?auth=register" replace />} />
 
-      <Route element={<ProtectedRoute />}>
+      <Route path="/app" element={<ProtectedRoute />}>
         <Route element={<AppShell />}>
           <Route index element={<Dashboard />} />
           <Route path="transactions" element={<ComingSoon title="Transactions" day="Day 5" />} />

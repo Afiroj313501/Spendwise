@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   Bell, ChevronDown, LayoutGrid, LogOut, Receipt, Search, Settings, Target, TrendingUp, Wallet,
 } from 'lucide-react'
@@ -8,11 +8,11 @@ import Logo from '../components/Logo'
 import { useAuth } from '../features/auth/AuthContext'
 
 const links: { to: string; label: string; icon: LucideIcon; end?: boolean }[] = [
-  { to: '/', label: 'Dashboard', icon: LayoutGrid, end: true },
-  { to: '/transactions', label: 'Transactions', icon: Receipt },
-  { to: '/budgets', label: 'Budgets', icon: Wallet },
-  { to: '/goals', label: 'Goals & Savings', icon: Target },
-  { to: '/analytics', label: 'Analytics', icon: TrendingUp },
+  { to: '/app', label: 'Dashboard', icon: LayoutGrid, end: true },
+  { to: '/app/transactions', label: 'Transactions', icon: Receipt },
+  { to: '/app/budgets', label: 'Budgets', icon: Wallet },
+  { to: '/app/goals', label: 'Goals & Savings', icon: Target },
+  { to: '/app/analytics', label: 'Analytics', icon: TrendingUp },
 ]
 
 const roundBtn =
@@ -21,6 +21,12 @@ const roundBtn =
 export default function AppShell() {
   const { user, logout } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
+  const navigate = useNavigate()
+
+  async function handleLogout() {
+    navigate('/')
+    await logout()
+  }
 
   const initials = (user?.name ?? '')
     .split(' ')
@@ -81,7 +87,7 @@ export default function AppShell() {
                   <p className="truncate text-sm text-slate-500">{user?.email}</p>
                 </div>
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left text-red-500 hover:bg-red-50"
                 >
                   <LogOut size={16} /> Log out
