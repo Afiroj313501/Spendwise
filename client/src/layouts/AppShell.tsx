@@ -38,7 +38,7 @@ export default function AppShell() {
   return (
     <div className="min-h-screen">
       <header className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 px-4 py-5 md:px-8">
-        <Logo />
+        <Link to="/"><Logo /></Link>
 
         <nav className="order-last w-full overflow-x-auto rounded-full bg-white/70 p-2 shadow-soft lg:order-none lg:w-auto">
           <ul className="flex gap-1">
