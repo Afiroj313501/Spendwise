@@ -1,1 +1,26 @@
 @import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-canvas: #f4f7fd;
+  --color-ink: #0f172a;
+  --color-brand-50: #eaf1ff;
+  --color-brand-100: #dbe7ff;
+  --color-brand-500: #1e6bff;
+  --color-brand-600: #0a56f0;
+  --color-brand-700: #0b3fd1;
+  --color-cyan-brand: #09c3ff;
+
+  --radius-card: 1.75rem;
+  --shadow-soft: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.05);
+}
+
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
