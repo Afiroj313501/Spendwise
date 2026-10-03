@@ -6,6 +6,8 @@ import { env } from './config/env'
 import { prisma } from './config/prisma'
 import authRoutes from './modules/auth/auth.routes'
 import { errorHandler, notFound } from './middleware/errorHandler'
+import categoryRoutes from './modules/categories/categories.routes'
+import transactionRoutes from './modules/transactions/transactions.routes'
 
 const app = express()
 
@@ -29,6 +31,8 @@ app.get('/api/health/db', async (_req, res) => {
 })
 
 app.use('/api/auth', authRoutes)
+app.use('/api/categories', categoryRoutes)
+app.use('/api/transactions', transactionRoutes)
 
 app.use(notFound)
 app.use(errorHandler)
