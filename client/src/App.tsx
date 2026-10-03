@@ -4,6 +4,7 @@ import AppShell from './layouts/AppShell'
 import ComingSoon from './pages/ComingSoon'
 import Dashboard from './pages/Dashboard'
 import Landing from './pages/Landing'
+import Transactions from './pages/Transactions'
 
 export default function App() {
   return (
@@ -15,7 +16,7 @@ export default function App() {
       <Route path="/app" element={<ProtectedRoute />}>
         <Route element={<AppShell />}>
           <Route index element={<Dashboard />} />
-          <Route path="transactions" element={<ComingSoon title="Transactions" day="Day 5" />} />
+          <Route path="transactions" element={<Transactions />} />
           <Route path="budgets" element={<ComingSoon title="Budgets" day="Day 8" />} />
           <Route path="goals" element={<ComingSoon title="Goals & Savings" day="Day 8" />} />
           <Route path="analytics" element={<ComingSoon title="Analytics" day="Day 7" />} />
