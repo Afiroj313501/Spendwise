@@ -8,6 +8,7 @@ import authRoutes from './modules/auth/auth.routes'
 import { errorHandler, notFound } from './middleware/errorHandler'
 import categoryRoutes from './modules/categories/categories.routes'
 import transactionRoutes from './modules/transactions/transactions.routes'
+import analyticsRoutes from './modules/analytics/analytics.routes'
 
 const app = express()
 
@@ -33,6 +34,7 @@ app.get('/api/health/db', async (_req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/categories', categoryRoutes)
 app.use('/api/transactions', transactionRoutes)
+app.use('/api/analytics', analyticsRoutes)
 
 app.use(notFound)
 app.use(errorHandler)
