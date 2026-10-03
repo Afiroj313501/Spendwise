@@ -26,3 +26,18 @@ export type TransactionInput = {
   description: string | null
   categoryId: string | null
 }
+export type Delta = { current: string; previous: string; change: string; percent: string | null }
+
+export type Insight =
+  | { kind: 'category_up'; category: string; percent: string; amount: string }
+  | { kind: 'spending_down'; percent: string }
+  | { kind: 'no_data' }
+
+export type Summary = {
+  month: string
+  partial: boolean
+  balance: Delta
+  income: Delta
+  expense: Delta
+  insight: Insight | null
+}

@@ -1,6 +1,9 @@
 import { ChevronRight, Sparkles } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
-export default function InsightCard({ message, action }: { message: string; action: string }) {
+type Props = { message: string; action: string; to: string }
+
+export default function InsightCard({ message, action, to }: Props) {
   return (
     <section className="flex min-h-[300px] flex-col justify-between rounded-card bg-gradient-to-br from-brand-700 via-brand-600 to-cyan-brand p-6 text-white shadow-soft">
       <div>
@@ -12,10 +15,13 @@ export default function InsightCard({ message, action }: { message: string; acti
         </div>
         <p className="mt-6 text-xl font-medium leading-snug">{message}</p>
       </div>
-      <button className="mt-6 inline-flex w-fit items-center gap-1 self-end rounded-full bg-white px-5 py-2.5 font-medium text-brand-600 hover:bg-brand-50">
+      <Link
+        to={to}
+        className="mt-6 inline-flex w-fit items-center gap-1 self-end rounded-full bg-white px-5 py-2.5 font-medium text-brand-600 hover:bg-brand-50"
+      >
         {action}
         <ChevronRight size={16} />
-      </button>
+      </Link>
     </section>
   )
 }
