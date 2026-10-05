@@ -22,3 +22,9 @@ export function monthRange(month: string) {
   const last = new Date(Date.UTC(y, m, 0)).getUTCDate()
   return { from: `${month}-01`, to: `${month}-${String(last).padStart(2, '0')}` }
 }
+
+// "2026-10" -> "Oct"
+export function monthShort(month: string) {
+  const [y, m] = month.split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString('en-US', { timeZone: 'UTC', month: 'short' })
+}

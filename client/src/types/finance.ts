@@ -41,3 +41,9 @@ export type Summary = {
   expense: Delta
   insight: Insight | null
 }
+
+export type CashflowPoint = { month: string; income: string; expense: string }
+export type Cashflow = { month: string; points: CashflowPoint[] }
+
+export type BreakdownItem = { name: string; amount: string; percent: string }
+export type Breakdown = { month: string; total: string; items: BreakdownItem[] }

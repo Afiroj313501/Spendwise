@@ -24,3 +24,7 @@ export function formatDate(iso: string) {
 
 // Today's date in the user's own time zone, as YYYY-MM-DD
 export const todayLocal = () => new Date().toLocaleDateString('en-CA')
+
+// 12500 -> "12.5K" (for chart axes and tight spaces)
+export const formatCompact = (value: number) =>
+  new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value)

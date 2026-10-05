@@ -5,12 +5,14 @@ import Card from '../components/ui/Card'
 import InsightCard from '../components/ui/InsightCard'
 import StatCard from '../components/ui/StatCard'
 import { useAuth } from '../features/auth/AuthContext'
+import CashFlowChart from '../features/dashboard/CashFlowChart'
+import ExpenseDonut from '../features/dashboard/ExpenseDonut'
 import LatestTransactions from '../features/dashboard/LatestTransactions'
 import MonthPicker from '../features/dashboard/MonthPicker'
 import { insightContent } from '../features/dashboard/insights'
-import { getSummary } from '../services/analytics'
+import { getBreakdown, getCashflow, getSummary } from '../services/analytics'
 import { listTransactions } from '../services/finance'
-import type { Delta, Summary, Transaction } from '../types/finance'
+import type { Breakdown, Cashflow, Delta, Summary, Transaction } from '../types/finance'
 import { errorMessage } from '../utils/error'
 import { formatMoney } from '../utils/format'
 import { currentMonth, monthLabel, monthRange } from '../utils/month'
@@ -57,6 +59,8 @@ export default function Dashboard() {
   const [month, setMonth] = useState(currentMonth)
   const [summary, setSummary] = useState<Summary | null>(null)
   const [latest, setLatest] = useState<Transaction[] | null>(null)
+  const [cashflow, setCashflow] = useState<Cashflow | null>(null)
+  const [breakdown, setBreakdown] = useState<Breakdown | null>(null)
   const [error, setError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
 
@@ -66,11 +70,13 @@ export default function Dashboard() {
     const { from, to } = monthRange(month)
     const q = new URLSearchParams({ limit: '6', sortBy: 'date', order: 'desc', from, to })
 
-    Promise.all([getSummary(month), listTransactions(q.toString())])
-      .then(([s, t]) => {
+    Promise.all([getSummary(month), listTransactions(q.toString()), getCashflow(month), getBreakdown(month)])
+      .then(([s, t, c, b]) => {
         if (ignore) return
         setSummary(s)
         setLatest(t.data)
+        setCashflow(c)
+        setBreakdown(b)
       })
       .catch((err) => {
         if (!ignore) setError(errorMessage(err))
@@ -131,7 +137,7 @@ export default function Dashboard() {
               <SkeletonCard className="h-[208px]" />
             </>
           )}
-          <Placeholder title="Monthly Cash Flow" className="h-[430px] sm:col-span-2" note="Line chart: Day 7" />
+          <CashFlowChart data={stale ? null : cashflow} currency={currency} className="sm:col-span-2" />
           <Placeholder title="Savings Goals" className="h-[340px] sm:col-span-2" note="Progress bars: Day 8" />
         </div>
 
@@ -149,7 +155,12 @@ export default function Dashboard() {
           ) : (
             <SkeletonCard className="h-[208px]" />
           )}
-          <Placeholder title="Expense Breakdown" className="min-h-[420px] sm:row-span-2" note="Donut chart: Day 7" />
+          <ExpenseDonut
+            data={stale ? null : breakdown}
+            month={month}
+            currency={currency}
+            className="min-h-[420px] sm:row-span-2"
+          />
           {summary ? (
             <InsightCard message={insight.message} action={insight.action} to={insight.to} />
           ) : (
