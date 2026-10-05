@@ -63,7 +63,7 @@ async function main() {
 
   const budgetRows: { userId: string; categoryId: string; amount: string; month: Date }[] = []
 
-  for (let offset = 0; offset < 3; offset++) {
+  for (let offset = 0; offset < 6; offset++) {
     const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - offset, 1))
     const y = d.getUTCFullYear()
     const m = d.getUTCMonth()

@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '../../config/prisma'
+import { shiftMonth, toDbDate } from '../../utils/dates'
 
 const ZERO = new Prisma.Decimal(0)
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -125,5 +126,87 @@ export async function getSummary(userId: string, month: string) {
     income: delta(incomeCur, incomePrev),
     expense: delta(expenseCur, expensePrev),
     insight: await buildInsight(userId, { prevStart, start, next, prevEnd }, expenseCur, expensePrev),
+  }
+}
+
+// Income and expense totals for each of the last `count` months, oldest first
+export async function getCashflow(userId: string, month: string, count: number) {
+  const first = shiftMonth(month, -(count - 1))
+  const from = `${first}-01`
+  const to = `${shiftMonth(month, 1)}-01`
+
+  const rows = await prisma.$queryRaw<{ month: string; type: string; total: Prisma.Decimal }[]>`
+    SELECT to_char("date", 'YYYY-MM') AS month, "type"::text AS type, SUM("amount") AS total
+    FROM "Transaction"
+    WHERE "userId" = ${userId} AND "date" >= ${from}::date AND "date" < ${to}::date
+    GROUP BY 1, 2
+  `
+
+  const totals = new Map<string, { income: Prisma.Decimal; expense: Prisma.Decimal }>()
+  for (const r of rows) {
+    const entry = totals.get(r.month) ?? { income: ZERO, expense: ZERO }
+    const value = new Prisma.Decimal(r.total)
+    if (r.type === 'INCOME') entry.income = value
+    else entry.expense = value
+    totals.set(r.month, entry)
+  }
+
+  // Months with no transactions still appear, as zero
+  const points = Array.from({ length: count }, (_, i) => {
+    const m = shiftMonth(first, i)
+    const t = totals.get(m)
+    return {
+      month: m,
+      income: (t?.income ?? ZERO).toFixed(2),
+      expense: (t?.expense ?? ZERO).toFixed(2),
+    }
+  })
+
+  return { month, points }
+}
+
+// Spending by category for one month: top 4 plus "Other"
+export async function getBreakdown(userId: string, month: string) {
+  const start = toDbDate(`${month}-01`)
+  const next = toDbDate(`${shiftMonth(month, 1)}-01`)
+
+  const rows = await prisma.transaction.groupBy({
+    by: ['categoryId'],
+    where: { userId, type: 'EXPENSE', date: { gte: start, lt: next } },
+    _sum: { amount: true },
+  })
+
+  const ids = rows.map((r) => r.categoryId).filter((id): id is string => id !== null)
+  const categories = await prisma.category.findMany({
+    where: { userId, id: { in: ids } },
+    select: { id: true, name: true },
+  })
+  const names = new Map(categories.map((c) => [c.id, c.name]))
+
+  const items = rows
+    .map((r) => ({
+      name: r.categoryId ? (names.get(r.categoryId) ?? 'Uncategorized') : 'Uncategorized',
+      amount: r._sum.amount ?? ZERO,
+    }))
+    .filter((i) => i.amount.gt(0))
+    .sort((a, b) => b.amount.comparedTo(a.amount))
+
+  const total = items.reduce((sum, i) => sum.plus(i.amount), ZERO)
+
+  const TOP = 4
+  const shown = items.slice(0, TOP)
+  const rest = items.slice(TOP)
+  if (rest.length > 0) {
+    shown.push({ name: 'Other', amount: rest.reduce((sum, i) => sum.plus(i.amount), ZERO) })
+  }
+
+  return {
+    month,
+    total: total.toFixed(2),
+    items: shown.map((i) => ({
+      name: i.name,
+      amount: i.amount.toFixed(2),
+      percent: total.isZero() ? '0.0' : i.amount.div(total).times(100).toFixed(1),
+    })),
   }
 }

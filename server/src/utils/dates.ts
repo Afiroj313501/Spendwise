@@ -8,3 +8,10 @@ export function isRealDate(value: string) {
 
 export const toDbDate = (value: string) => new Date(`${value}T00:00:00.000Z`)
 export const fromDbDate = (date: Date) => date.toISOString().slice(0, 10)
+
+// "2026-10" shifted by -1 -> "2026-09"
+export function shiftMonth(month: string, by: number) {
+  const [y, m] = month.split('-').map(Number)
+  const d = new Date(Date.UTC(y, m - 1 + by, 1))
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`
+}
