@@ -4,7 +4,7 @@ import { TrendingUp } from 'lucide-react'
 import Card from '../../components/ui/Card'
 import type { Cashflow } from '../../types/finance'
 import { formatCompact, formatMoney } from '../../utils/format'
-import { monthLabel, monthShort } from '../../utils/month'
+import { monthLabel, monthShort } from '../../utils/months'
 
 const INCOME = '#0a56f0'
 const EXPENSE = '#09c3ff'

@@ -3,7 +3,7 @@ import { Pie, PieChart, ResponsiveContainer } from 'recharts'
 import Card from '../../components/ui/Card'
 import type { Breakdown } from '../../types/finance'
 import { formatCompact, formatMoney } from '../../utils/format'
-import { monthLabel } from '../../utils/month'
+import { monthLabel } from '../../utils/months'
 
 const COLORS = ['#0a56f0', '#09c3ff', '#6b9cff', '#8fe3ff']
 const OTHER = '#cbd5e1'

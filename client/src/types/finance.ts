@@ -47,3 +47,39 @@ export type Cashflow = { month: string; points: CashflowPoint[] }
 
 export type BreakdownItem = { name: string; amount: string; percent: string }
 export type Breakdown = { month: string; total: string; items: BreakdownItem[] }
+
+export type BudgetStatus = 'ok' | 'warning' | 'over'
+
+export type Budget = {
+  id: string
+  category: { id: string; name: string }
+  month: string
+  amount: string
+  spent: string
+  remaining: string // negative when over budget
+  percent: string
+  status: BudgetStatus
+}
+
+export type BudgetList = {
+  month: string
+  budgets: Budget[]
+  totals: { budget: string; spent: string; remaining: string; percent: string }
+}
+
+export type Goal = {
+  id: string
+  name: string
+  targetAmount: string
+  savedAmount: string
+  percent: string
+  deadline: string | null // YYYY-MM-DD
+  completed: boolean
+}
+
+export type GoalInput = {
+  name: string
+  targetAmount: string
+  deadline: string | null
+  savedAmount?: string
+}

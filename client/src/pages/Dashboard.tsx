@@ -1,30 +1,23 @@
 import { useEffect, useState } from 'react'
-import type { ReactNode } from 'react'
 import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react'
-import Card from '../components/ui/Card'
 import InsightCard from '../components/ui/InsightCard'
 import StatCard from '../components/ui/StatCard'
 import { useAuth } from '../features/auth/AuthContext'
+import BudgetAlerts from '../features/dashboard/BudgetAlerts'
 import CashFlowChart from '../features/dashboard/CashFlowChart'
 import ExpenseDonut from '../features/dashboard/ExpenseDonut'
 import LatestTransactions from '../features/dashboard/LatestTransactions'
 import MonthPicker from '../features/dashboard/MonthPicker'
+import SavingsGoalsCard from '../features/dashboard/SavingsGoalsCard'
 import { insightContent } from '../features/dashboard/insights'
 import { getBreakdown, getCashflow, getSummary } from '../services/analytics'
+import { getBudgets } from '../services/budgets'
 import { listTransactions } from '../services/finance'
-import type { Breakdown, Cashflow, Delta, Summary, Transaction } from '../types/finance'
+import { getGoals } from '../services/goals'
+import type { Breakdown, BudgetList, Cashflow, Delta, Goal, Summary, Transaction } from '../types/finance'
 import { errorMessage } from '../utils/error'
 import { formatMoney } from '../utils/format'
-import { currentMonth, monthLabel, monthRange } from '../utils/month'
-
-function Placeholder({ title, className = '', note }: { title: string; className?: string; note: ReactNode }) {
-  return (
-    <Card className={className}>
-      <h3 className="text-xl font-medium">{title}</h3>
-      <p className="mt-2 text-sm text-slate-400">{note}</p>
-    </Card>
-  )
-}
+import { currentMonth, monthLabel, monthRange } from '../utils/months'
 
 function SkeletonCard({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse rounded-card bg-white/80 shadow-soft ${className}`} />
@@ -61,6 +54,8 @@ export default function Dashboard() {
   const [latest, setLatest] = useState<Transaction[] | null>(null)
   const [cashflow, setCashflow] = useState<Cashflow | null>(null)
   const [breakdown, setBreakdown] = useState<Breakdown | null>(null)
+  const [budgets, setBudgets] = useState<BudgetList | null>(null)
+  const [goals, setGoals] = useState<Goal[] | null>(null)
   const [error, setError] = useState('')
   const [reloadKey, setReloadKey] = useState(0)
 
@@ -70,13 +65,22 @@ export default function Dashboard() {
     const { from, to } = monthRange(month)
     const q = new URLSearchParams({ limit: '6', sortBy: 'date', order: 'desc', from, to })
 
-    Promise.all([getSummary(month), listTransactions(q.toString()), getCashflow(month), getBreakdown(month)])
-      .then(([s, t, c, b]) => {
+    Promise.all([
+      getSummary(month),
+      listTransactions(q.toString()),
+      getCashflow(month),
+      getBreakdown(month),
+      getBudgets(month),
+      getGoals(),
+    ])
+      .then(([s, t, c, b, bud, g]) => {
         if (ignore) return
         setSummary(s)
         setLatest(t.data)
         setCashflow(c)
         setBreakdown(b)
+        setBudgets(bud)
+        setGoals(g)
       })
       .catch((err) => {
         if (!ignore) setError(errorMessage(err))
@@ -109,6 +113,8 @@ export default function Dashboard() {
         </div>
       )}
 
+      <BudgetAlerts budgets={stale ? null : (budgets?.budgets ?? null)} />
+
       <div className={`grid gap-6 transition-opacity xl:grid-cols-2 ${stale ? 'opacity-60' : ''}`}>
         {/* Left column */}
         <div className="grid content-start gap-6 sm:grid-cols-2">
@@ -138,7 +144,7 @@ export default function Dashboard() {
             </>
           )}
           <CashFlowChart data={stale ? null : cashflow} currency={currency} className="sm:col-span-2" />
-          <Placeholder title="Savings Goals" className="h-[340px] sm:col-span-2" note="Progress bars: Day 8" />
+          <SavingsGoalsCard goals={goals} currency={currency} className="min-h-[300px] sm:col-span-2" />
         </div>
 
         {/* Right column */}
