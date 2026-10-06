@@ -93,6 +93,19 @@ async function main() {
     data: rows.map((r) => ({ ...r, type: r.type as TransactionType })),
   })
   await prisma.budget.createMany({ data: budgetRows })
+  await prisma.savingsGoal.createMany({
+    data: [
+      { userId: user.id, name: 'Emergency fund', targetAmount: '100000.00', savedAmount: '42000.00' },
+      {
+        userId: user.id,
+        name: 'New laptop',
+        targetAmount: '85000.00',
+        savedAmount: '51000.00',
+        deadline: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 3, 1)),
+      },
+      { userId: user.id, name: 'Family trip', targetAmount: '30000.00', savedAmount: '30000.00' },
+    ],
+  })
 
   console.log(`Seeded ${rows.length} transactions and ${budgetRows.length} budgets`)
   console.log('Login: demo@spendwise.app / Demo@1234')
