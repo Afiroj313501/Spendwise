@@ -3,6 +3,7 @@ import { Minus, Pencil, Plus, Target, Trash2 } from 'lucide-react'
 import Card from '../components/ui/Card'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
 import ProgressBar from '../components/ui/ProgressBar'
+import { useToast } from '../components/ui/Toast'
 import { primaryButton } from '../components/ui/styles'
 import { useAuth } from '../features/auth/AuthContext'
 import FundsModal from '../features/goals/FundsModal'
@@ -11,6 +12,7 @@ import { deleteGoal, getGoals } from '../services/goals'
 import type { Goal } from '../types/finance'
 import { errorMessage } from '../utils/error'
 import { daysUntil, formatDate, formatMoney } from '../utils/format'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 function deadlineText(goal: Goal) {
   if (!goal.deadline || goal.completed) return null
@@ -22,6 +24,8 @@ function deadlineText(goal: Goal) {
 }
 
 export default function Goals() {
+  useDocumentTitle('Goals')
+  const toast = useToast()
   const { user } = useAuth()
   const currency = user?.currency ?? 'BDT'
   const money = (v: number | string) => formatMoney(v, currency)
@@ -60,6 +64,7 @@ export default function Goals() {
     setDeleteError('')
     try {
       await deleteGoal(deleting.id)
+      toast.success('Goal deleted')
       setDeleting(null)
       reload()
     } catch (err) {
@@ -169,6 +174,7 @@ export default function Goals() {
             setEditing(null)
           }}
           onSaved={() => {
+            toast.success(editing ? 'Goal updated' : 'Goal created')
             setFormOpen(false)
             setEditing(null)
             reload()
@@ -183,6 +189,7 @@ export default function Goals() {
           currency={currency}
           onClose={() => setFunds(null)}
           onSaved={() => {
+            toast.success(funds.action === 'add' ? 'Funds added' : 'Funds withdrawn')
             setFunds(null)
             reload()
           }}

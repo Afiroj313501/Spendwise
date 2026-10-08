@@ -3,6 +3,7 @@ import { Plus, Receipt, Search, X } from 'lucide-react'
 import Card from '../components/ui/Card'
 import Modal from '../components/ui/Modal'
 import Pagination from '../components/ui/Pagination'
+import { useToast } from '../components/ui/Toast'
 import { control, primaryButton } from '../components/ui/styles'
 import { useAuth } from '../features/auth/AuthContext'
 import TransactionFormModal from '../features/transactions/TransactionForModal'
@@ -13,6 +14,7 @@ import { deleteTransaction, listCategories, listTransactions } from '../services
 import type { Category, Transaction, TransactionList, TxType } from '../types/finance'
 import { errorMessage } from '../utils/error'
 import { formatMoney } from '../utils/format'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const PAGE_SIZE = 10
 
@@ -32,6 +34,8 @@ const initialFilters: Filters = {
 }
 
 export default function Transactions() {
+  useDocumentTitle('Transactions')
+  const toast = useToast()
   const { user } = useAuth()
   const currency = user?.currency ?? 'BDT'
 
@@ -113,6 +117,7 @@ export default function Transactions() {
   }
 
   function handleSaved() {
+    toast.success(editing ? 'Transaction updated' : 'Transaction added')
     setFormOpen(false)
     setEditing(null)
     setReloadKey((k) => k + 1)
@@ -124,6 +129,7 @@ export default function Transactions() {
     setDeleteError('')
     try {
       await deleteTransaction(deleting.id)
+      toast.success('Transaction deleted')
       setDeleting(null)
       // If we removed the last row of a later page, step back one page
       if (result && result.data.length === 1 && filters.page > 1) {

@@ -5,6 +5,7 @@ import type { LucideIcon } from 'lucide-react'
 import Logo from '../components/Logo'
 import AuthModal from '../features/auth/AuthModal'
 import { useAuth } from '../features/auth/AuthContext'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const primaryBtn =
   'inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-brand-600 to-brand-500 px-7 py-3.5 font-medium text-white shadow-lg shadow-brand-600/25 transition hover:-translate-y-0.5 hover:shadow-xl disabled:opacity-60'
@@ -96,6 +97,7 @@ function DashboardPreview() {
 }
 
 export default function Landing() {
+  useDocumentTitle('')
   const { user, loading, login } = useAuth()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()

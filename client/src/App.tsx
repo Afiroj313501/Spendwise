@@ -6,6 +6,7 @@ import ComingSoon from './pages/ComingSoon'
 import Dashboard from './pages/Dashboard'
 import Goals from './pages/Goals'
 import Landing from './pages/Landing'
+import NotFound from './pages/NotFound'
 import Transactions from './pages/Transactions'
 
 export default function App() {
@@ -22,10 +23,10 @@ export default function App() {
           <Route path="budgets" element={<Budgets />} />
           <Route path="goals" element={<Goals />} />
           <Route path="analytics" element={<ComingSoon title="Analytics" day="Day 9" />} />
+          <Route path="*" element={<NotFound inApp />} />
         </Route>
       </Route>
-
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   )
 }

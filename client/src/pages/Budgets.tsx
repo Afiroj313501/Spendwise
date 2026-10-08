@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Copy, Pencil, Plus, Trash2, Wallet } from 'lucide-react'
 import Card from '../components/ui/Card'
 import ConfirmDialog from '../components/ui/ConfirmDialog'
+import { useToast } from '../components/ui/Toast'
 import ProgressBar from '../components/ui/ProgressBar'
 import { primaryButton } from '../components/ui/styles'
 import { useAuth } from '../features/auth/AuthContext'
@@ -14,8 +15,11 @@ import type { Budget, BudgetList, Category } from '../types/finance'
 import { errorMessage } from '../utils/error'
 import { formatMoney } from '../utils/format'
 import { currentMonth, monthLabel, shiftMonth } from '../utils/months'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 export default function Budgets() {
+  useDocumentTitle('Budgets')
+  const toast = useToast()
   const { user } = useAuth()
   const currency = user?.currency ?? 'BDT'
   const money = (v: number | string) => formatMoney(v, currency)
@@ -92,6 +96,7 @@ export default function Budgets() {
     setDeleteError('')
     try {
       await deleteBudget(deleting.id)
+      toast.success('Budget deleted')
       setDeleting(null)
       reload()
     } catch (err) {
@@ -240,6 +245,7 @@ export default function Budgets() {
             setEditing(null)
           }}
           onSaved={() => {
+            toast.success(editing ? 'Budget updated' : 'Budget saved')
             setFormOpen(false)
             setEditing(null)
             setNotice('')

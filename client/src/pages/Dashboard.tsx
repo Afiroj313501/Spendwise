@@ -18,6 +18,7 @@ import type { Breakdown, BudgetList, Cashflow, Delta, Goal, Summary, Transaction
 import { errorMessage } from '../utils/error'
 import { formatMoney } from '../utils/format'
 import { currentMonth, monthLabel, monthRange } from '../utils/months'
+import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 function SkeletonCard({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse rounded-card bg-white/80 shadow-soft ${className}`} />
@@ -45,6 +46,7 @@ function ChangeNote({
 }
 
 export default function Dashboard() {
+  useDocumentTitle('Dashboard')
   const { user } = useAuth()
   const currency = user?.currency ?? 'BDT'
   const money = (v: number | string) => formatMoney(v, currency)

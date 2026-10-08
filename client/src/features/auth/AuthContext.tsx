@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
+import { useToast } from '../../components/ui/Toast'
 import { api, refreshSession, setAccessToken } from '../../services/api'
 import type { AuthResponse, User } from '../../types/auth'
 
@@ -16,6 +17,17 @@ const AuthContext = createContext<AuthState | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const toast = useToast()
+
+  useEffect(() => {
+    const onExpired = () => {
+      setAccessToken(null)
+      setUser(null)
+      toast.error('Your session expired. Please log in again.')
+    }
+    window.addEventListener('auth:expired', onExpired)
+    return () => window.removeEventListener('auth:expired', onExpired)
+  }, [toast])
 
   // On page load, try to restore the session from the refresh cookie
   useEffect(() => {

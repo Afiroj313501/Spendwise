@@ -53,6 +53,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (res.status === 401 && !path.startsWith('/auth/')) {
     const session = await refreshSession()
     if (session) res = await send(path, init)
+    if (!session || res.status === 401) window.dispatchEvent(new Event('auth:expired'))
   }
 
   const body = res.status === 204 ? null : await res.json().catch(() => null)

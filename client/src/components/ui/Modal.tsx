@@ -10,17 +10,19 @@ export default function Modal({ title, onClose, children }: Props) {
     closeRef.current = onClose
   })
 
-  // Close on Escape and lock page scroll while open
+  // Close on Escape, lock page scroll, and restore focus on close
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') closeRef.current()
     }
+    const trigger = document.activeElement as HTMLElement | null
     document.addEventListener('keydown', onKey)
     const previous = document.body.style.overflow
     document.body.style.overflow = 'hidden'
     return () => {
       document.removeEventListener('keydown', onKey)
       document.body.style.overflow = previous
+      trigger?.focus()
     }
   }, [])
 
