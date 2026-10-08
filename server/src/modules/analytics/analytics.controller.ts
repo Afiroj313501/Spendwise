@@ -16,3 +16,8 @@ export const breakdown = asyncHandler(async (req, res) => {
   const { month } = res.locals.query as SummaryQuery
   res.json(await service.getBreakdown(req.user!.id, month))
 })
+
+export const report = asyncHandler(async (req, res) => {
+  const { month } = res.locals.query as SummaryQuery
+  res.json(await service.getReport(req.user!.id, month))
+})

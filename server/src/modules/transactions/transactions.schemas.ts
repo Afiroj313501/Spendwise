@@ -43,3 +43,20 @@ export const listQuerySchema = z
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>
 export type ListQuery = z.infer<typeof listQuerySchema>
+
+export const exportQuerySchema = z
+  .object({
+    type: typeEnum.optional(),
+    categoryId: z.string().uuid().optional(),
+    from: isoDate.optional(),
+    to: isoDate.optional(),
+    search: z.string().trim().max(100).optional(),
+    sortBy: z.enum(['date', 'amount', 'createdAt']).default('date'),
+    order: z.enum(['asc', 'desc']).default('desc'),
+  })
+  .refine((q) => !q.from || !q.to || q.from <= q.to, {
+    message: '"from" must not be after "to"',
+    path: ['from'],
+  })
+
+export type ExportQuery = z.infer<typeof exportQuerySchema>

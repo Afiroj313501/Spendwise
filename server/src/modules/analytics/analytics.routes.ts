@@ -10,5 +10,6 @@ router.use(requireAuth)
 router.get('/summary', validateQuery(summaryQuerySchema), controller.summary)
 router.get('/cashflow', validateQuery(cashflowQuerySchema), controller.cashflow)
 router.get('/breakdown', validateQuery(summaryQuerySchema), controller.breakdown)
+router.get('/report', validateQuery(summaryQuerySchema), controller.report)
 
 export default router

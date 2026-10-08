@@ -2,14 +2,24 @@ import { Prisma } from '@prisma/client'
 import type { TransactionType } from '@prisma/client'
 import { prisma } from '../../config/prisma'
 import { AppError } from '../../utils/AppError'
+import { toCsv } from '../../utils/csv'
 import { fromDbDate, toDbDate } from '../../utils/dates'
-import type { CreateTransactionInput, ListQuery, UpdateTransactionInput } from './transactions.schemas'
+import type {
+  CreateTransactionInput,
+  ExportQuery,
+  ListQuery,
+  UpdateTransactionInput,
+} from './transactions.schemas'
+
+const MAX_EXPORT_ROWS = 20_000
 
 const include = {
   category: { select: { id: true, name: true, type: true } },
 } satisfies Prisma.TransactionInclude
 
 type TransactionRow = Prisma.TransactionGetPayload<{ include: typeof include }>
+type Filters = Pick<ListQuery, 'type' | 'categoryId' | 'from' | 'to' | 'search'>
+type Sort = Pick<ListQuery, 'sortBy' | 'order'>
 
 // Amounts leave the API as exact decimal strings, dates as YYYY-MM-DD
 function toDto(t: TransactionRow) {
@@ -25,15 +35,7 @@ function toDto(t: TransactionRow) {
   }
 }
 
-async function assertCategory(userId: string, categoryId: string, type: TransactionType) {
-  const category = await prisma.category.findFirst({ where: { id: categoryId, userId } })
-  if (!category) throw new AppError(400, 'Category not found')
-  if (category.type !== type) {
-    throw new AppError(400, `This category is for ${category.type.toLowerCase()} transactions`)
-  }
-}
-
-export async function list(userId: string, q: ListQuery) {
+function buildWhere(userId: string, q: Filters) {
   const where: Prisma.TransactionWhereInput = { userId }
   if (q.type) where.type = q.type
   if (q.categoryId) where.categoryId = q.categoryId
@@ -48,17 +50,34 @@ export async function list(userId: string, q: ListQuery) {
       { category: { name: { contains: q.search, mode: 'insensitive' } } },
     ]
   }
+  return where
+}
 
+// The id tiebreaker keeps pagination and exports stable when values tie
+function buildOrderBy(q: Sort): Prisma.TransactionOrderByWithRelationInput[] {
   const primary: Prisma.TransactionOrderByWithRelationInput =
     q.sortBy === 'amount' ? { amount: q.order }
     : q.sortBy === 'createdAt' ? { createdAt: q.order }
     : { date: q.order }
+  return [primary, { id: 'asc' }]
+}
+
+async function assertCategory(userId: string, categoryId: string, type: TransactionType) {
+  const category = await prisma.category.findFirst({ where: { id: categoryId, userId } })
+  if (!category) throw new AppError(400, 'Category not found')
+  if (category.type !== type) {
+    throw new AppError(400, `This category is for ${category.type.toLowerCase()} transactions`)
+  }
+}
+
+export async function list(userId: string, q: ListQuery) {
+  const where = buildWhere(userId, q)
 
   const [items, total, grouped] = await Promise.all([
     prisma.transaction.findMany({
       where,
       include,
-      orderBy: [primary, { id: 'asc' }], // id keeps pagination stable when values tie
+      orderBy: buildOrderBy(q),
       skip: (q.page - 1) * q.limit,
       take: q.limit,
     }),
@@ -80,6 +99,27 @@ export async function list(userId: string, q: ListQuery) {
       net: new Prisma.Decimal(income).minus(expense).toFixed(2),
     },
   }
+}
+
+// Every row matching the filters (not just one page), capped for safety
+export async function exportCsv(userId: string, q: ExportQuery) {
+  const rows = await prisma.transaction.findMany({
+    where: buildWhere(userId, q),
+    include,
+    orderBy: buildOrderBy(q),
+    take: MAX_EXPORT_ROWS,
+  })
+
+  return toCsv(
+    ['Date', 'Type', 'Category', 'Description', 'Amount'],
+    rows.map((t) => [
+      fromDbDate(t.date),
+      t.type === 'INCOME' ? 'Income' : 'Expense',
+      t.category?.name ?? 'Uncategorized',
+      t.description,
+      t.amount.toFixed(2),
+    ]),
+  )
 }
 
 export async function getOne(userId: string, id: string) {

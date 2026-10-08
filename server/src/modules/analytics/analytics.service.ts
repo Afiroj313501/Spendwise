@@ -1,6 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '../../config/prisma'
-import { shiftMonth, toDbDate } from '../../utils/dates'
+import { fromDbDate, shiftMonth, toDbDate } from '../../utils/dates'
 
 const ZERO = new Prisma.Decimal(0)
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -208,5 +208,134 @@ export async function getBreakdown(userId: string, month: string) {
       amount: i.amount.toFixed(2),
       percent: total.isZero() ? '0.0' : i.amount.div(total).times(100).toFixed(1),
     })),
+  }
+}
+
+// ---- Monthly report ----
+
+// Same comparison window as the dashboard: a month in progress is compared
+// with the same days of last month, a finished month with the whole of last month
+function windowFor(month: string) {
+  const [y, m] = month.split('-').map(Number)
+  const prevStart = new Date(Date.UTC(y, m - 2, 1))
+  const start = new Date(Date.UTC(y, m - 1, 1))
+  const next = new Date(Date.UTC(y, m, 1))
+  const now = new Date()
+  const inProgress = now >= start && now < next
+  const prevEnd = inProgress
+    ? new Date(Math.min(start.getTime(), prevStart.getTime() + now.getUTCDate() * DAY_MS))
+    : start
+  return { prevStart, start, next, prevEnd, inProgress }
+}
+
+async function totalsBetween(userId: string, from: Date, to: Date) {
+  const rows = await prisma.transaction.groupBy({
+    by: ['type'],
+    where: { userId, date: { gte: from, lt: to } },
+    _sum: { amount: true },
+    _count: { _all: true },
+  })
+  const row = (t: 'INCOME' | 'EXPENSE') => rows.find((r) => r.type === t)
+  return {
+    income: row('INCOME')?._sum.amount ?? ZERO,
+    expense: row('EXPENSE')?._sum.amount ?? ZERO,
+    count: rows.reduce((n, r) => n + r._count._all, 0),
+  }
+}
+
+const savingsRate = (income: Prisma.Decimal, net: Prisma.Decimal) =>
+  income.isZero() ? null : net.div(income).times(100).toFixed(1)
+
+export async function getReport(userId: string, month: string) {
+  const [y, m] = month.split('-').map(Number)
+  const w = windowFor(month)
+  const from = `${month}-01`
+  const to = `${shiftMonth(month, 1)}-01`
+
+  const [cur, prev, catCur, catPrev, top, weekdayRows] = await Promise.all([
+    totalsBetween(userId, w.start, w.next),
+    totalsBetween(userId, w.prevStart, w.prevEnd),
+    expenseByCategory(userId, w.start, w.next),
+    expenseByCategory(userId, w.prevStart, w.prevEnd),
+    prisma.transaction.findMany({
+      where: { userId, type: 'EXPENSE', date: { gte: w.start, lt: w.next } },
+      include: { category: { select: { name: true } } },
+      orderBy: [{ amount: 'desc' }, { id: 'asc' }],
+      take: 5,
+    }),
+    prisma.$queryRaw<{ dow: number; total: Prisma.Decimal }[]>`
+      SELECT EXTRACT(DOW FROM "date")::int AS dow, SUM("amount") AS total
+      FROM "Transaction"
+      WHERE "userId" = ${userId} AND "type" = 'EXPENSE'
+        AND "date" >= ${from}::date AND "date" < ${to}::date
+      GROUP BY 1
+    `,
+  ])
+
+  const ids = [...new Set([...catCur.keys(), ...catPrev.keys()])]
+  const found = await prisma.category.findMany({
+    where: { userId, id: { in: ids } },
+    select: { id: true, name: true },
+  })
+  const names = new Map(found.map((c) => [c.id, c.name]))
+
+  const rows = ids.map((id) => ({
+    name: names.get(id) ?? 'Unknown',
+    amount: catCur.get(id) ?? ZERO,
+    before: catPrev.get(id) ?? ZERO,
+  }))
+  const sumOf = (values: Iterable<Prisma.Decimal>) => [...values].reduce((s, v) => s.plus(v), ZERO)
+  const uncategorized = cur.expense.minus(sumOf(catCur.values()))
+  const uncategorizedBefore = prev.expense.minus(sumOf(catPrev.values()))
+  if (uncategorized.gt(0) || uncategorizedBefore.gt(0)) {
+    rows.push({ name: 'Uncategorized', amount: uncategorized, before: uncategorizedBefore })
+  }
+
+  const categories = rows
+    .filter((r) => r.amount.gt(0))
+    .sort((a, b) => b.amount.comparedTo(a.amount))
+    .map((r) => ({
+      name: r.name,
+      amount: r.amount.toFixed(2),
+      share: cur.expense.isZero() ? '0.0' : r.amount.div(cur.expense).times(100).toFixed(1),
+      previous: r.before.toFixed(2),
+      changePercent: r.before.isZero()
+        ? null
+        : r.amount.minus(r.before).div(r.before).times(100).toFixed(1),
+    }))
+
+  const curNet = cur.income.minus(cur.expense)
+  const prevNet = prev.income.minus(prev.expense)
+  const daysInMonth = new Date(Date.UTC(y, m, 0)).getUTCDate()
+  const daysCounted = w.inProgress ? new Date().getUTCDate() : daysInMonth
+
+  const byDay = new Map(weekdayRows.map((r) => [Number(r.dow), new Prisma.Decimal(r.total)]))
+  const weekdays = Array.from({ length: 7 }, (_, day) => ({
+    day,
+    total: (byDay.get(day) ?? ZERO).toFixed(2),
+  }))
+
+  return {
+    month,
+    partial: w.inProgress,
+    daysCounted,
+    income: delta(cur.income, prev.income),
+    expense: delta(cur.expense, prev.expense),
+    net: delta(curNet, prevNet),
+    savingsRate: {
+      current: savingsRate(cur.income, curNet),
+      previous: savingsRate(prev.income, prevNet),
+    },
+    transactionCount: cur.count,
+    dailyAverage: cur.expense.div(daysCounted).toFixed(2),
+    categories,
+    topExpenses: top.map((t) => ({
+      id: t.id,
+      description: t.description,
+      category: t.category?.name ?? null,
+      amount: t.amount.toFixed(2),
+      date: fromDbDate(t.date),
+    })),
+    weekdays,
   }
 }
