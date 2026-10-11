@@ -7,8 +7,9 @@ import { AppError } from '../../utils/AppError'
 import type { LoginInput, RegisterInput } from './auth.schemas'
 
 const DAY_MS = 24 * 60 * 60 * 1000
+const BCRYPT_ROUNDS = env.NODE_ENV === 'test' ? 4 : 12 // production always uses 12
 // Used so a login for an unknown email takes the same time as a real one
-const DUMMY_HASH = hashSync('not-a-real-password', 12)
+const DUMMY_HASH = hashSync('not-a-real-password', BCRYPT_ROUNDS)
 
 const publicUser = { id: true, name: true, email: true, currency: true } as const
 
@@ -54,7 +55,7 @@ export async function register(input: RegisterInput) {
     data: {
       name: input.name,
       email: input.email,
-      passwordHash: await hash(input.password, 12),
+      passwordHash: await hash(input.password, BCRYPT_ROUNDS),
       categories: { create: DEFAULT_CATEGORIES },
     },
     select: publicUser,

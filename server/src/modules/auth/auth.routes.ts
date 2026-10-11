@@ -2,12 +2,14 @@ import { Router } from 'express'
 import rateLimit from 'express-rate-limit'
 import { validate } from '../../middleware/validate'
 import { requireAuth } from '../../middleware/auth'
+import { env } from '../../config/env'
 import { loginSchema, registerSchema } from './auth.schemas'
 import * as controller from './auth.controller'
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 30,
+  skip: () => env.NODE_ENV === 'test', // tests create many accounts quickly
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { message: 'Too many attempts, please try again later' },
