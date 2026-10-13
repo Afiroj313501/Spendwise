@@ -10,9 +10,25 @@ jobs:
     defaults:
       run:
         working-directory: server
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: spendwise_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
-      DATABASE_URL: postgresql://user:pass@localhost:5432/ci
-      DIRECT_URL: postgresql://user:pass@localhost:5432/ci
+      NODE_ENV: test
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/spendwise_test
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/spendwise_test
+      JWT_ACCESS_SECRET: ci_only_secret_that_is_long_enough_for_validation_0123456789
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,6 +39,8 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npm run build
+      - run: npx prisma migrate deploy
+      - run: npm test
 
   client:
     runs-on: ubuntu-latest
