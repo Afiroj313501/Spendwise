@@ -24,6 +24,7 @@ const sha256 = (value: string) => createHash('sha256').update(value).digest('hex
 
 function signAccessToken(userId: string) {
   return jwt.sign({ sub: userId }, env.JWT_ACCESS_SECRET, {
+    algorithm: 'HS256',
     expiresIn: env.ACCESS_TOKEN_TTL_SECONDS,
   })
 }

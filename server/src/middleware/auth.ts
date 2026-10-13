@@ -10,7 +10,7 @@ export const requireAuth: RequestHandler = (req, _res, next) => {
   }
 
   try {
-    const payload = jwt.verify(header.slice(7), env.JWT_ACCESS_SECRET) as jwt.JwtPayload
+    const payload = jwt.verify(header.slice(7), env.JWT_ACCESS_SECRET, { algorithms: ['HS256'] }) as jwt.JwtPayload
     req.user = { id: payload.sub as string }
   } catch {
     throw new AppError(401, 'Invalid or expired token')

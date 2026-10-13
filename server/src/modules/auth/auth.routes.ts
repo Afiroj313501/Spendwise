@@ -1,25 +1,15 @@
 import { Router } from 'express'
-import rateLimit from 'express-rate-limit'
 import { validate } from '../../middleware/validate'
 import { requireAuth } from '../../middleware/auth'
-import { env } from '../../config/env'
+import { loginLimiter, refreshLimiter, registerLimiter } from '../../middleware/rateLimits'
 import { loginSchema, registerSchema } from './auth.schemas'
 import * as controller from './auth.controller'
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  limit: 30,
-  skip: () => env.NODE_ENV === 'test', // tests create many accounts quickly
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { message: 'Too many attempts, please try again later' },
-})
-
 const router = Router()
 
-router.post('/register', authLimiter, validate(registerSchema), controller.register)
-router.post('/login', authLimiter, validate(loginSchema), controller.login)
-router.post('/refresh', controller.refresh)
+router.post('/register', registerLimiter, validate(registerSchema), controller.register)
+router.post('/login', loginLimiter, validate(loginSchema), controller.login)
+router.post('/refresh', refreshLimiter, controller.refresh)
 router.post('/logout', controller.logout)
 router.get('/me', requireAuth, controller.me)
 

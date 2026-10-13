@@ -37,6 +37,8 @@ jobs:
           cache: npm
           cache-dependency-path: server/package-lock.json
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
       - run: npx prisma generate
       - run: npm run build
       - run: npx prisma migrate deploy
@@ -55,4 +57,6 @@ jobs:
           cache: npm
           cache-dependency-path: client/package-lock.json
       - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true
       - run: npm run build
