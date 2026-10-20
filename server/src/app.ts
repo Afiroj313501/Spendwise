@@ -18,6 +18,10 @@ const app = express()
 
 app.set('trust proxy', env.TRUST_PROXY_HOPS)
 app.use(helmet())
+app.use('/api', (_req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store')
+  next()
+})
 app.use(
   cors({
     origin: (origin, callback) => callback(null, !origin || clientOrigins.includes(origin)),

@@ -11,6 +11,11 @@ describe('response headers', () => {
     expect(res.headers['x-content-type-options']).toBe('nosniff')
     expect(res.headers['x-frame-options']).toBeDefined()
   })
+
+  it('forbids caching of API responses', async () => {
+    const res = await http().get('/api/health')
+    expect(res.headers['cache-control']).toBe('no-store')
+  })
 })
 
 describe('cross-site request protection', () => {
