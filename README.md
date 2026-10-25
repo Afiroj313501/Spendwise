@@ -29,7 +29,7 @@ The API runs on a free hosting tier. If nobody has used it for a while, **the fi
 
 | Transactions | Budgets |
 |---|---|
-| ![Transactions](docs/screenshots/transactions.png) | ![Budgets](docs/screenshots/budgets.png) |
+| ![Transactions](docs/screenshots/transections.png) | ![Budgets](docs/screenshots/budgets.png) |
 
 | Goals and Budgets | Analytics |
 |---|---|
