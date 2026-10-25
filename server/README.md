@@ -1,5 +1,4 @@
 # SpendWise
-
 **Personal finance and expense analytics platform.** Track income and expenses, set monthly budgets and savings goals, and understand your spending through dashboards, charts and monthly reports.
 
 [![CI](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml)
@@ -32,9 +31,9 @@ The API runs on a free hosting tier. If nobody has used it for a while, **the fi
 |---|---|
 | ![Transactions](docs/screenshots/transactions.png) | ![Budgets](docs/screenshots/budgets.png) |
 
-| Analytics | Mobile |
+| Goals and Budgets | Analytics |
 |---|---|
-| ![Analytics](docs/screenshots/analytics.png) | ![Mobile view](docs/screenshots/mobile.png) |
+| ![Goals and Savings](docs/screenshots/savings.png) | ![Analytics](docs/screenshots/analytics.png) |
 
 ## Table of contents
 
@@ -391,9 +390,9 @@ Ideas for next steps:
 
 **YOUR NAME**
 
-- Portfolio: https://YOUR-PORTFOLIO-URL
-- LinkedIn: https://www.linkedin.com/in/YOUR-PROFILE
-- GitHub: https://github.com/YOUR_USERNAME
+- Portfolio: https://abdullahfiroj-dev.vercel.app
+- LinkedIn:  https://www.linkedin.com/in/abdullah-firoj-900697375
+- GitHub:    https://github.com/Afiroj313501
 
 ## License
 
