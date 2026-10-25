@@ -5,11 +5,26 @@ if (!process.env.DIRECT_URL && process.env.DATABASE_URL) {
   process.env.DIRECT_URL = process.env.DATABASE_URL
 }
 
+function normalizeUrl(url: string): string {
+  const trimmed = url.trim().replace(/\/+$/, '')
+  if (!trimmed) return ''
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+}
+
 const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().default(5000),
-    CLIENT_URL: z.string().default('http://localhost:5173'),
+    CLIENT_URL: z
+      .string()
+      .default('http://localhost:5173')
+      .transform((val) =>
+        val
+          .split(',')
+          .map(normalizeUrl)
+          .filter(Boolean)
+          .join(','),
+      ),
     DATABASE_URL: z.string().min(1),
     JWT_ACCESS_SECRET: z.string().min(32),
     ACCESS_TOKEN_TTL_SECONDS: z.coerce.number().default(900),
@@ -18,7 +33,7 @@ const envSchema = z
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
   })
   .superRefine((value, ctx) => {
-    for (const origin of value.CLIENT_URL.split(',').map((o) => o.trim()).filter(Boolean)) {
+    for (const origin of value.CLIENT_URL.split(',').filter(Boolean)) {
       try {
         new URL(origin)
       } catch {
