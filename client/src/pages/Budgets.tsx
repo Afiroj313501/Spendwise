@@ -44,10 +44,9 @@ export default function Budgets() {
 
   useEffect(() => {
     let ignore = false
-    setError('')
     getBudgets(month)
       .then((d) => {
-        if (!ignore) setData(d)
+        if (!ignore) { setData(d); setError(''); }
       })
       .catch((err) => {
         if (!ignore) setError(errorMessage(err))
@@ -57,7 +56,7 @@ export default function Budgets() {
     }
   }, [month, reloadKey])
 
-  const reload = () => setReloadKey((k) => k + 1)
+  const reload = () => { setError(''); setReloadKey((k) => k + 1); }
   const stale = data !== null && data.month !== month
   const budgets = data?.budgets ?? []
   const budgeted = new Set(budgets.map((b) => b.category.id))
@@ -68,6 +67,7 @@ export default function Budgets() {
 
   function changeMonth(next: string) {
     setNotice('')
+    setError('')
     setMonth(next)
   }
 

@@ -43,10 +43,9 @@ export default function Goals() {
 
   useEffect(() => {
     let ignore = false
-    setError('')
     getGoals()
       .then((g) => {
-        if (!ignore) setGoals(g)
+        if (!ignore) { setGoals(g); setError(''); }
       })
       .catch((err) => {
         if (!ignore) setError(errorMessage(err))
@@ -56,7 +55,7 @@ export default function Goals() {
     }
   }, [reloadKey])
 
-  const reload = () => setReloadKey((k) => k + 1)
+  const reload = () => { setError(''); setReloadKey((k) => k + 1); }
 
   async function confirmDelete() {
     if (!deleting) return

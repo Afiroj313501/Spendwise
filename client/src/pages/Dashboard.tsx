@@ -63,7 +63,6 @@ export default function Dashboard() {
 
   useEffect(() => {
     let ignore = false // drops responses from an outdated month
-    setError('')
     const { from, to } = monthRange(month)
     const q = new URLSearchParams({ limit: '6', sortBy: 'date', order: 'desc', from, to })
 
@@ -77,6 +76,7 @@ export default function Dashboard() {
     ])
       .then(([s, t, c, b, bud, g]) => {
         if (ignore) return
+        setError('')
         setSummary(s)
         setLatest(t.data)
         setCashflow(c)
@@ -103,13 +103,13 @@ export default function Dashboard() {
           <h1 className="text-3xl font-semibold tracking-tight">Dashboard Overview</h1>
           <p className="mt-1 text-lg text-slate-500">Your financial health at a glance, with smart insights and trends.</p>
         </div>
-        <MonthPicker month={month} onChange={setMonth} />
+        <MonthPicker month={month} onChange={(m) => { setError(''); setMonth(m); }} />
       </div>
 
       {error && (
         <div role="alert" className="mb-6 flex items-center justify-between gap-4 rounded-2xl bg-red-50 px-5 py-3 text-red-600">
           <span>{error}</span>
-          <button onClick={() => setReloadKey((k) => k + 1)} className="rounded-full bg-white px-4 py-1.5 text-sm font-medium shadow-soft">
+          <button onClick={() => { setError(''); setReloadKey((k) => k + 1); }} className="rounded-full bg-white px-4 py-1.5 text-sm font-medium shadow-soft">
             Retry
           </button>
         </div>

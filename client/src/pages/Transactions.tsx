@@ -75,11 +75,12 @@ export default function Transactions() {
 
   useEffect(() => {
     let ignore = false // drops responses from outdated requests
-    setLoading(true)
-    setError('')
     listTransactions(query)
       .then((r) => {
-        if (!ignore) setResult(r)
+        if (!ignore) {
+          setResult(r)
+          setError('')
+        }
       })
       .catch((err) => {
         if (!ignore) setError(errorMessage(err))
@@ -93,9 +94,15 @@ export default function Transactions() {
   }, [query, reloadKey])
 
   // Any filter change goes back to page 1
-  const patch = (p: Partial<Filters>) => setFilters((f) => ({ ...f, page: 1, ...p }))
+  const patch = (p: Partial<Filters>) => {
+    setLoading(true)
+    setError('')
+    setFilters((f) => ({ ...f, page: 1, ...p }))
+  }
 
   function toggleSort(key: SortKey) {
+    setLoading(true)
+    setError('')
     setFilters((f) =>
       f.sortBy === key
         ? { ...f, order: f.order === 'asc' ? 'desc' : 'asc', page: 1 }
@@ -120,7 +127,7 @@ export default function Transactions() {
     toast.success(editing ? 'Transaction updated' : 'Transaction added')
     setFormOpen(false)
     setEditing(null)
-    setReloadKey((k) => k + 1)
+    setLoading(true); setReloadKey((k) => k + 1)
   }
 
   async function confirmDelete() {
@@ -135,7 +142,7 @@ export default function Transactions() {
       if (result && result.data.length === 1 && filters.page > 1) {
         setFilters((f) => ({ ...f, page: f.page - 1 }))
       } else {
-        setReloadKey((k) => k + 1)
+        setLoading(true); setReloadKey((k) => k + 1)
       }
     } catch (err) {
       setDeleteError(errorMessage(err))

@@ -96,6 +96,8 @@ function DashboardPreview() {
   )
 }
 
+const CURRENT_YEAR = new Date().getFullYear()
+
 export default function Landing() {
   useDocumentTitle('')
   const { user, loading, login } = useAuth()
@@ -279,7 +281,7 @@ export default function Landing() {
       )}
 
       <footer className="border-t border-slate-200/70 py-8 text-center text-sm text-slate-500">
-        © {new Date().getFullYear()} SpendWise · A full-stack portfolio project
+        © {CURRENT_YEAR} SpendWise · A full-stack portfolio project
       </footer>
 
       {showAuth && authMode && (

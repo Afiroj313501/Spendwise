@@ -8,7 +8,7 @@ const isProd = env.NODE_ENV === 'production'
 
 const cookieOptions = {
   httpOnly: true,
-  secure: isProd,
+  secure: isProd || env.COOKIE_SAME_SITE === 'none',
   sameSite: env.COOKIE_SAME_SITE,
   path: '/api/auth',
 }

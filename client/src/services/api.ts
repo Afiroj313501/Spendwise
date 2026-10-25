@@ -1,6 +1,7 @@
 import type { AuthResponse } from '../types/auth'
 
-const BASE = import.meta.env.VITE_API_URL ?? '/api'
+const envUrl = (import.meta.env.VITE_API_URL ?? '').trim().replace(/\/+$/, '')
+const BASE = !envUrl ? '/api' : (envUrl.endsWith('/api') ? envUrl : envUrl + '/api')
 
 let accessToken: string | null = null
 let refreshing: Promise<AuthResponse | null> | null = null

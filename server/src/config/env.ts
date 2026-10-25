@@ -1,6 +1,10 @@
 import 'dotenv/config'
 import { z } from 'zod'
 
+if (!process.env.DIRECT_URL && process.env.DATABASE_URL) {
+  process.env.DIRECT_URL = process.env.DATABASE_URL
+}
+
 const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
@@ -14,9 +18,9 @@ const envSchema = z
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
   })
   .superRefine((value, ctx) => {
-    for (const origin of value.CLIENT_URL.split(',')) {
+    for (const origin of value.CLIENT_URL.split(',').map((o) => o.trim()).filter(Boolean)) {
       try {
-        new URL(origin.trim())
+        new URL(origin)
       } catch {
         ctx.addIssue({ code: 'custom', path: ['CLIENT_URL'], message: `Not a valid URL: ${origin}` })
       }
