@@ -62,4 +62,25 @@ body {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+
+  @media print {
+    @page {
+      margin: 14mm;
+    }
+
+    body {
+      background: white;
+    }
+
+    main {
+      max-width: none !important;
+      padding: 0 !important;
+    }
+
+    section {
+      break-inside: avoid;
+      box-shadow: none !important;
+      border: 1px solid #e2e8f0;
+    }
+  }
 }

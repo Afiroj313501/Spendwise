@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ArrowDownLeft, ArrowUpRight, BarChart3, CalendarDays, Receipt, TrendingUp, Wallet } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, BarChart3, CalendarDays, Download, FileText, Receipt, TrendingUp, Wallet } from 'lucide-react'
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import Card from '../components/ui/Card'
 import MonthPicker from '../features/dashboard/MonthPicker'
@@ -13,6 +13,41 @@ import { useDocumentTitle } from '../hooks/useDocumentTitle'
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const COLORS = ['#0a56f0', '#09c3ff', '#6b9cff', '#8fe3ff', '#b9eefd']
+
+function csvCell(value: string | number | null) {
+  const text = String(value ?? '')
+  const safe = /^[=+\-@]/.test(text) ? `'${text}` : text
+  return `"${safe.replaceAll('"', '""')}"`
+}
+
+function downloadReportCsv(report: MonthlyReport, currency: string) {
+  const rows: (string | number | null)[][] = [
+    ['SpendWise analytics report', monthLabel(report.month)],
+    ['Currency', currency],
+    [],
+    ['Summary', 'Current', 'Previous', 'Change', 'Change %'],
+    ['Income', report.income.current, report.income.previous, report.income.change, report.income.percent],
+    ['Expenses', report.expense.current, report.expense.previous, report.expense.change, report.expense.percent],
+    ['Net savings', report.net.current, report.net.previous, report.net.change, report.net.percent],
+    ['Savings rate', report.savingsRate.current, report.savingsRate.previous, null, null],
+    [],
+    ['Category', 'Amount', 'Share %', 'Previous', 'Change %'],
+    ...report.categories.map((item) => [item.name, item.amount, item.share, item.previous, item.changePercent]),
+    [],
+    ['Weekday', 'Expense total'],
+    ...report.weekdays.map((item) => [WEEKDAYS[item.day], item.total]),
+    [],
+    ['Largest expenses', 'Category', 'Amount', 'Date'],
+    ...report.topExpenses.map((item) => [item.description || 'Expense', item.category, item.amount, item.date]),
+  ]
+  const csv = rows.map((row) => row.map((cell) => csvCell(cell)).join(',')).join('\r\n')
+  const url = URL.createObjectURL(new Blob([`\uFEFF${csv}`], { type: 'text/csv;charset=utf-8' }))
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `spendwise-analytics-${report.month}.csv`
+  link.click()
+  URL.revokeObjectURL(url)
+}
 
 function LoadingCard({ className = '' }: { className?: string }) {
   return <div className={`animate-pulse rounded-card bg-white/80 shadow-soft ${className}`} aria-busy="true" />
@@ -103,11 +138,31 @@ export default function Analytics() {
           <h1 className="text-3xl font-semibold tracking-tight">Analytics</h1>
           <p className="mt-1 text-lg text-slate-500">Understand your spending patterns and make better decisions.</p>
         </div>
-        <MonthPicker month={month} onChange={(next) => { setError(''); setReport(null); setMonth(next) }} />
+        <div className="flex flex-wrap items-center justify-end gap-2 print:hidden">
+          {report && (
+            <>
+              <button
+                type="button"
+                onClick={() => downloadReportCsv(report, currency)}
+                className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-soft transition hover:bg-brand-50 hover:text-brand-700"
+              >
+                <Download size={17} /> CSV
+              </button>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2.5 text-sm font-medium text-white shadow-soft transition hover:bg-slate-700"
+              >
+                <FileText size={17} /> PDF
+              </button>
+            </>
+          )}
+          <MonthPicker month={month} onChange={(next) => { setError(''); setReport(null); setMonth(next) }} />
+        </div>
       </div>
 
       {error && (
-        <div role="alert" className="mb-6 flex items-center justify-between gap-4 rounded-2xl bg-red-50 px-5 py-3 text-red-600">
+        <div role="alert" className="mb-6 flex items-center justify-between gap-4 rounded-2xl bg-red-50 px-5 py-3 text-red-600 print:hidden">
           <span>{error}</span>
           <button onClick={() => { setError(''); setReport(null); setReloadKey((key) => key + 1) }} className="rounded-full bg-white px-4 py-1.5 text-sm font-medium shadow-soft">Retry</button>
         </div>
