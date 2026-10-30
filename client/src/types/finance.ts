@@ -48,6 +48,33 @@ export type Cashflow = { month: string; points: CashflowPoint[] }
 export type BreakdownItem = { name: string; amount: string; percent: string }
 export type Breakdown = { month: string; total: string; items: BreakdownItem[] }
 
+export type MonthlyReport = {
+  month: string
+  partial: boolean
+  daysCounted: number
+  income: Delta
+  expense: Delta
+  net: Delta
+  savingsRate: { current: string | null; previous: string | null }
+  transactionCount: number
+  dailyAverage: string
+  categories: {
+    name: string
+    amount: string
+    share: string
+    previous: string
+    changePercent: string | null
+  }[]
+  topExpenses: {
+    id: string
+    description: string | null
+    category: string | null
+    amount: string
+    date: string
+  }[]
+  weekdays: { day: number; total: string }[]
+}
+
 export type BudgetStatus = 'ok' | 'warning' | 'over'
 
 export type Budget = {

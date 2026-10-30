@@ -2,7 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './features/auth/ProtectedRoute'
 import AppShell from './layouts/AppShell'
 import Budgets from './pages/Budgets'
-import ComingSoon from './pages/ComingSoon'
+import Analytics from './pages/Analytics'
 import Dashboard from './pages/Dashboard'
 import Goals from './pages/Goals'
 import Landing from './pages/Landing'
@@ -22,7 +22,7 @@ export default function App() {
           <Route path="transactions" element={<Transactions />} />
           <Route path="budgets" element={<Budgets />} />
           <Route path="goals" element={<Goals />} />
-          <Route path="analytics" element={<ComingSoon title="Analytics" day="Day 9" />} />
+          <Route path="analytics" element={<Analytics />} />
           <Route path="*" element={<NotFound inApp />} />
         </Route>
       </Route>
